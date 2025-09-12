@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+
+{% block title %}Entrada de Produtos - Sistema de Gerenciamento de Estoque{% endblock %}
+
+{% block page_title %}Entrada de Produtos{% endblock %}
+
+{% block page_actions %}
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-primary btn-sm" onclick="location.reload()">
+            <i class="bi bi-arrow-clockwise me-1"></i>
+            Atualizar
+        </button>
+        {% if user.is_superuser %}
+        <a href="/admin/inventory/notafiscal/add/" target="_blank" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus me-1"></i>
+            Nova Nota Fiscal
+        </a>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card stat-card border-primary">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-primary me-3">
+                        <i class="bi bi-receipt"></i>
+                    </div>
+                    <div>
+                        <div class="stat-number text-primary">{{ stats.total_notas }}</div>
+                        <div class="stat-label">Total de Notas</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card stat-card border-warning">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-warning me-3">
+                        <i class="bi bi-clock"></i>
+                    </div>
+                    <div>
+                        <div class="stat-number text-warning">{{ stats.pendentes }}</div>
+                        <div class="stat-label">Pendentes</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card stat-card border-success">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-success me-3">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+                    <div>
+                        <div class="stat-number text-success">{{ stats.processadas }}</div>
+                        <div class="stat-label">Processadas</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card stat-card border-info">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-info me-3">
+                        <i class="bi bi-currency-dollar"></i>
+                    </div>
+                    <div>
+                        <div class="stat-number text-info">R$ {{ stats.valor_total_mes|floatformat:2 }}</div>
+                        <div class="stat-label">Valor Mês Atual</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label for="search" class="form-label">Buscar</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ search_query }}" placeholder="Número da nota ou fornecedor">
+            </div>
+            
+            <div class="col-md-3">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">Todos os status</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if value == status_filter %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary me-2">
+                    <i class="bi bi-search me-1"></i>
+                    Filtrar
+                </button>
+                <a href="{% url 'inventory:entrada' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i>
+                    Limpar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Notas Fiscais Table -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Número da Nota</th>
+                        <th>Fornecedor</th>
+                        <th>Data de Emissão</th>
+                        <th>Valor Total</th>
+                        <th>Status</th>
+                        <th>Cadastrado por</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for nota in notas %}
+                    <tr>
+                        <td class="fw-semibold">{{ nota.numero_nota }}</td>
+                        <td>
+                            <div>
+                                <div class="fw-semibold">{{ nota.fornecedor.nome_empresa }}</div>
+                                <small class="text-muted">{{ nota.fornecedor.cnpj }}</small>
+                            </div>
+                        </td>
+                        <td>{{ nota.data_emissao|date:"d/m/Y" }}</td>
+                        <td class="fw-semibold">R$ {{ nota.valor_total|floatformat:2 }}</td>
+                        <td>
+                            <span class="badge {% if nota.status == 'pendente' %}bg-warning
+                                              {% elif nota.status == 'processada' %}bg-success
+                                              {% else %}bg-secondary{% endif %}">
+                                {{ nota.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ nota.usuario_cadastro.get_full_name|default:nota.usuario_cadastro.username }}</td>
+                        <td>
+                            {% if nota.status == 'pendente' and user.is_superuser %}
+                            <button type="button" class="btn btn-success btn-sm" 
+                                    onclick="processarEntrada({{ nota.id }})">
+                                <i class="bi bi-check-circle me-1"></i>
+                                Processar
+                            </button>
+                            {% endif %}
+                            <a href="/admin/inventory/notafiscal/{{ nota.id }}/change/" target="_blank" 
+                               class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-eye me-1"></i>
+                                Ver
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="bi bi-receipt display-6 d-block mb-3"></i>
+                            <h5>Nenhuma nota fiscal encontrada</h5>
+                            <p>{% if user.is_superuser %}Crie uma nova nota fiscal para começar.{% endif %}</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if notas.has_other_pages %}
+        <nav aria-label="Paginação">
+            <ul class="pagination justify-content-center mt-4">
+                {% if notas.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}page={{ notas.previous_page_number }}">
+                            Anterior
+                        </a>
+                    </li>
+                {% endif %}
+                
+                {% for num in notas.paginator.page_range %}
+                    {% if notas.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > notas.number|add:'-3' and num < notas.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if notas.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}page={{ notas.next_page_number }}">
+                            Próximo
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function processarEntrada(notaId) {
+    if (!confirm('Confirma o processamento desta entrada? Esta ação não pode ser desfeita.')) {
+        return;
+    }
+    
+    fetch(`{% url 'inventory:processar_entrada' 0 %}`.replace('0', notaId), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-success alert-dismissible fade show';
+            alert.innerHTML = `
+                <i class="bi bi-check-circle-fill me-2"></i>
+                ${data.message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            // Insert at top of content
+            const content = document.querySelector('main .row').parentElement;
+            content.insertBefore(alert, content.firstChild);
+            
+            // Reload page after delay
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            // Show error message
+            alert('Erro: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao processar entrada');
+    });
+}
+</script>
+{% endblock %}
