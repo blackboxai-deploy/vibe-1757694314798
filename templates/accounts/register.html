@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bs-theme="auto">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - Sistema de Gerenciamento de Estoque</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bs-font-sans-serif: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        
+        body {
+            font-family: var(--bs-font-sans-serif);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+        
+        [data-bs-theme="dark"] body {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+        }
+        
+        .register-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            max-width: 1000px;
+            width: 100%;
+            margin: auto;
+        }
+        
+        [data-bs-theme="dark"] .register-container {
+            background: rgba(33, 37, 41, 0.95);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .register-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        [data-bs-theme="dark"] .register-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+        }
+        
+        .register-content {
+            padding: 40px;
+        }
+        
+        .form-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--bs-gray-800);
+        }
+        
+        [data-bs-theme="dark"] .form-title {
+            color: var(--bs-gray-100);
+        }
+        
+        .form-subtitle {
+            color: var(--bs-gray-600);
+            margin-bottom: 2rem;
+        }
+        
+        [data-bs-theme="dark"] .form-subtitle {
+            color: var(--bs-gray-400);
+        }
+        
+        .form-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--bs-gray-50);
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+        
+        [data-bs-theme="dark"] .form-section {
+            background: var(--bs-gray-800);
+            border-left-color: #3498db;
+        }
+        
+        .section-title {
+            font-weight: 600;
+            color: var(--bs-gray-800);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        [data-bs-theme="dark"] .section-title {
+            color: var(--bs-gray-100);
+        }
+        
+        .section-title i {
+            margin-right: 0.5rem;
+            color: #667eea;
+        }
+        
+        [data-bs-theme="dark"] .section-title i {
+            color: #3498db;
+        }
+        
+        .form-floating {
+            margin-bottom: 1rem;
+        }
+        
+        .form-control {
+            border: 2px solid transparent;
+            background-color: white;
+            border-radius: 8px;
+            padding: 1rem 0.75rem;
+            height: auto;
+            transition: all 0.3s ease;
+        }
+        
+        [data-bs-theme="dark"] .form-control {
+            background-color: var(--bs-gray-700);
+            color: var(--bs-gray-100);
+        }
+        
+        .form-control:focus {
+            background-color: white;
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        [data-bs-theme="dark"] .form-control:focus {
+            background-color: var(--bs-gray-600);
+            border-color: #3498db;
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+        
+        .btn-register {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 0.875rem 3rem;
+            font-weight: 600;
+            font-size: 1rem;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            color: white;
+        }
+        
+        [data-bs-theme="dark"] .btn-register {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+        }
+        
+        [data-bs-theme="dark"] .btn-register:hover {
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+        }
+        
+        .login-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--bs-gray-200);
+        }
+        
+        [data-bs-theme="dark"] .login-link {
+            border-color: var(--bs-gray-700);
+        }
+        
+        .login-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+        
+        [data-bs-theme="dark"] .login-link a {
+            color: #3498db;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .form-check-input:checked {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+        
+        [data-bs-theme="dark"] .form-check-input:checked {
+            background-color: #3498db;
+            border-color: #3498db;
+        }
+        
+        .password-requirements {
+            font-size: 0.875rem;
+            color: var(--bs-gray-600);
+            margin-top: 0.5rem;
+        }
+        
+        [data-bs-theme="dark"] .password-requirements {
+            color: var(--bs-gray-400);
+        }
+        
+        .terms-section {
+            background: var(--bs-light);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+        
+        [data-bs-theme="dark"] .terms-section {
+            background: var(--bs-gray-800);
+        }
+        
+        @media (max-width: 768px) {
+            .register-container {
+                border-radius: 0;
+                margin: 0;
+            }
+            
+            .register-header,
+            .register-content {
+                padding: 30px 20px;
+            }
+            
+            .form-section {
+                padding: 1rem;
+            }
+        }
+        
+        /* Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .form-section {
+            animation: fadeInUp 0.6s ease;
+        }
+        
+        .form-section:nth-child(1) { animation-delay: 0.1s; }
+        .form-section:nth-child(2) { animation-delay: 0.2s; }
+        .form-section:nth-child(3) { animation-delay: 0.3s; }
+    </style>
+</head>
+<body>
+    <!-- Theme Detection Script -->
+    <script>
+        function getStoredTheme() { return localStorage.getItem('theme') }
+        function getPreferredTheme() {
+            const storedTheme = getStoredTheme()
+            if (storedTheme) {
+                return storedTheme
+            }
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        }
+        
+        function setTheme(theme) {
+            if (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-bs-theme', 'dark')
+            } else {
+                document.documentElement.setAttribute('data-bs-theme', theme)
+            }
+        }
+        
+        setTheme(getPreferredTheme())
+    </script>
+
+    <!-- Theme Toggle -->
+    <div class="theme-toggle">
+        <div class="dropdown">
+            <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-palette"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#" data-bs-theme-value="light">
+                    <i class="bi bi-sun me-2"></i>Claro
+                </a></li>
+                <li><a class="dropdown-item" href="#" data-bs-theme-value="dark">
+                    <i class="bi bi-moon me-2"></i>Escuro
+                </a></li>
+                <li><a class="dropdown-item" href="#" data-bs-theme-value="auto">
+                    <i class="bi bi-circle-half me-2"></i>Automático
+                </a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="register-container">
+            <!-- Header -->
+            <div class="register-header">
+                <h1><i class="bi bi-person-plus me-3"></i>Criar Nova Conta</h1>
+                <p class="mb-0">Preencha os dados abaixo para criar sua conta no sistema</p>
+            </div>
+            
+            <!-- Content -->
+            <div class="register-content">
+                <!-- Messages -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {% if message.tags == 'error' %}
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            {% elif message.tags == 'success' %}
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                            {% endif %}
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- Personal Information Section -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="bi bi-person-circle"></i>
+                            Informações Pessoais
+                        </h3>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    {{ form.first_name }}
+                                    <label for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }}</label>
+                                    {% if form.first_name.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.first_name.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    {{ form.last_name }}
+                                    <label for="{{ form.last_name.id_for_label }}">{{ form.last_name.label }}</label>
+                                    {% if form.last_name.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.last_name.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-floating">
+                            {{ form.email }}
+                            <label for="{{ form.email.id_for_label }}">
+                                <i class="bi bi-envelope me-2"></i>{{ form.email.label }}
+                            </label>
+                            {% if form.email.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.email.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Professional Information Section -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="bi bi-briefcase"></i>
+                            Informações Profissionais <small class="text-muted">(Opcional)</small>
+                        </h3>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    {{ form.phone }}
+                                    <label for="{{ form.phone.id_for_label }}">{{ form.phone.label }}</label>
+                                    {% if form.phone.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.phone.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    {{ form.department }}
+                                    <label for="{{ form.department.id_for_label }}">{{ form.department.label }}</label>
+                                    {% if form.department.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.department.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-floating">
+                            {{ form.position }}
+                            <label for="{{ form.position.id_for_label }}">{{ form.position.label }}</label>
+                            {% if form.position.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.position.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Security Section -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="bi bi-shield-lock"></i>
+                            Segurança da Conta
+                        </h3>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    {{ form.password1 }}
+                                    <label for="{{ form.password1.id_for_label }}">{{ form.password1.label }}</label>
+                                    {% if form.password1.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.password1.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="password-requirements">
+                                    {{ form.password1.help_text }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    {{ form.password2 }}
+                                    <label for="{{ form.password2.id_for_label }}">{{ form.password2.label }}</label>
+                                    {% if form.password2.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.password2.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="terms-section">
+                            <div class="form-check">
+                                {{ form.terms_accepted }}
+                                <label class="form-check-label" for="{{ form.terms_accepted.id_for_label }}">
+                                    {{ form.terms_accepted.label }}
+                                </label>
+                                {% if form.terms_accepted.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.terms_accepted.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">
+                                Ao criar uma conta, você concorda em seguir nossas políticas de uso do sistema.
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-register">
+                            <i class="bi bi-person-check me-2"></i>
+                            Criar Conta
+                        </button>
+                    </div>
+                    
+                    <div class="login-link">
+                        <p class="mb-0">
+                            Já tem uma conta? 
+                            <a href="{% url 'accounts:login' %}">Fazer login</a>
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Theme switching
+        document.querySelectorAll('[data-bs-theme-value]').forEach(toggle => {
+            toggle.addEventListener('click', (e) => {
+                e.preventDefault()
+                const theme = toggle.getAttribute('data-bs-theme-value')
+                localStorage.setItem('theme', theme)
+                setTheme(theme)
+            })
+        })
+        
+        // Phone mask
+        document.querySelector('#{{ form.phone.id_for_label }}')?.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '')
+            if (value.length <= 11) {
+                if (value.length > 6) {
+                    value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')
+                } else if (value.length > 2) {
+                    value = value.replace(/(\d{2})(\d)/, '($1) $2')
+                }
+                e.target.value = value
+            }
+        })
+        
+        // Form handling
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const submitBtn = this.querySelector('button[type="submit"]')
+            submitBtn.disabled = true
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Criando conta...'
+        })
+        
+        // Auto-dismiss alerts
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(alert => {
+                const bsAlert = new bootstrap.Alert(alert)
+                bsAlert.close()
+            })
+        }, 7000)
+    </script>
+</body>
+</html>
