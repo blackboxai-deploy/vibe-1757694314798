@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bs-theme="auto">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema de Gerenciamento de Estoque</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bs-font-sans-serif: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        
+        body {
+            font-family: var(--bs-font-sans-serif);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        [data-bs-theme="dark"] body {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+        }
+        
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            max-width: 900px;
+            width: 100%;
+            min-height: 600px;
+        }
+        
+        [data-bs-theme="dark"] .login-container {
+            background: rgba(33, 37, 41, 0.95);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .login-left {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        [data-bs-theme="dark"] .login-left {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+        }
+        
+        .login-right {
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .brand-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .brand-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 2rem 0;
+        }
+        
+        .feature-list li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .feature-list i {
+            margin-right: 1rem;
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+        
+        .login-form {
+            max-width: 400px;
+        }
+        
+        .form-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--bs-gray-800);
+        }
+        
+        [data-bs-theme="dark"] .form-title {
+            color: var(--bs-gray-100);
+        }
+        
+        .form-subtitle {
+            color: var(--bs-gray-600);
+            margin-bottom: 2rem;
+        }
+        
+        [data-bs-theme="dark"] .form-subtitle {
+            color: var(--bs-gray-400);
+        }
+        
+        .form-floating {
+            margin-bottom: 1rem;
+        }
+        
+        .form-control {
+            border: 2px solid transparent;
+            background-color: var(--bs-gray-50);
+            border-radius: 12px;
+            padding: 1rem 0.75rem;
+            height: auto;
+            transition: all 0.3s ease;
+        }
+        
+        [data-bs-theme="dark"] .form-control {
+            background-color: var(--bs-gray-800);
+            color: var(--bs-gray-100);
+        }
+        
+        .form-control:focus {
+            background-color: white;
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        [data-bs-theme="dark"] .form-control:focus {
+            background-color: var(--bs-gray-700);
+            border-color: #3498db;
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+        
+        .btn-login {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 0.875rem 2rem;
+            font-weight: 600;
+            font-size: 1rem;
+            color: white;
+            width: 100%;
+            margin-top: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            color: white;
+        }
+        
+        [data-bs-theme="dark"] .btn-login {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+        }
+        
+        [data-bs-theme="dark"] .btn-login:hover {
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+        }
+        
+        .register-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--bs-gray-200);
+        }
+        
+        [data-bs-theme="dark"] .register-link {
+            border-color: var(--bs-gray-700);
+        }
+        
+        .register-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+        
+        [data-bs-theme="dark"] .register-link a {
+            color: #3498db;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .remember-me {
+            margin: 1rem 0;
+        }
+        
+        .form-check-input:checked {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+        
+        [data-bs-theme="dark"] .form-check-input:checked {
+            background-color: #3498db;
+            border-color: #3498db;
+        }
+        
+        @media (max-width: 768px) {
+            .login-container {
+                border-radius: 0;
+                min-height: 100vh;
+            }
+            
+            .login-left {
+                display: none;
+            }
+            
+            .login-right {
+                padding: 40px 30px;
+            }
+            
+            .brand-title {
+                font-size: 2rem;
+            }
+        }
+        
+        /* Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .login-form {
+            animation: fadeInUp 0.6s ease;
+        }
+        
+        .feature-list li {
+            animation: fadeInUp 0.6s ease;
+        }
+        
+        .feature-list li:nth-child(1) { animation-delay: 0.1s; }
+        .feature-list li:nth-child(2) { animation-delay: 0.2s; }
+        .feature-list li:nth-child(3) { animation-delay: 0.3s; }
+        .feature-list li:nth-child(4) { animation-delay: 0.4s; }
+    </style>
+</head>
+<body>
+    <!-- Theme Detection Script -->
+    <script>
+        function getStoredTheme() { return localStorage.getItem('theme') }
+        function getPreferredTheme() {
+            const storedTheme = getStoredTheme()
+            if (storedTheme) {
+                return storedTheme
+            }
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        }
+        
+        function setTheme(theme) {
+            if (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-bs-theme', 'dark')
+            } else {
+                document.documentElement.setAttribute('data-bs-theme', theme)
+            }
+        }
+        
+        setTheme(getPreferredTheme())
+        
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            const storedTheme = getStoredTheme()
+            if (storedTheme !== 'light' && storedTheme !== 'dark') {
+                setTheme(getPreferredTheme())
+            }
+        })
+    </script>
+
+    <!-- Theme Toggle -->
+    <div class="theme-toggle">
+        <div class="dropdown">
+            <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-palette"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#" data-bs-theme-value="light">
+                    <i class="bi bi-sun me-2"></i>Claro
+                </a></li>
+                <li><a class="dropdown-item" href="#" data-bs-theme-value="dark">
+                    <i class="bi bi-moon me-2"></i>Escuro
+                </a></li>
+                <li><a class="dropdown-item" href="#" data-bs-theme-value="auto">
+                    <i class="bi bi-circle-half me-2"></i>Automático
+                </a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="login-container">
+        <div class="row g-0 h-100">
+            <!-- Left Side - Brand Info -->
+            <div class="col-lg-6 login-left d-none d-lg-flex">
+                <div>
+                    <div class="brand-title">
+                        <i class="bi bi-boxes me-3"></i>
+                        SGE
+                    </div>
+                    <p class="brand-subtitle">
+                        Sistema completo de gerenciamento de estoque com controle de qualidade, 
+                        rastreabilidade e análise de produtos.
+                    </p>
+                    
+                    <ul class="feature-list">
+                        <li>
+                            <i class="bi bi-check-circle"></i>
+                            Controle completo de estoque
+                        </li>
+                        <li>
+                            <i class="bi bi-shield-check"></i>
+                            Sistema de análise de qualidade
+                        </li>
+                        <li>
+                            <i class="bi bi-graph-up"></i>
+                            Relatórios e analytics avançados
+                        </li>
+                        <li>
+                            <i class="bi bi-people"></i>
+                            Gestão de usuários e permissões
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Right Side - Login Form -->
+            <div class="col-lg-6 login-right">
+                <div class="login-form">
+                    <h2 class="form-title">Bem-vindo</h2>
+                    <p class="form-subtitle">Entre com suas credenciais para acessar o sistema</p>
+                    
+                    <form method="post">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="TzMg3Orido32i0E6Xxd10YU6aovQi6BjmqingTqvj4PFbBAmhFVpAIiArSxoUsGK">
+                        
+                        <div class="form-floating">
+                            <input type="email" name="email" class="form-control form-control-lg" placeholder="Digite seu email" required maxlength="320" id="id_email">
+                            <label for="id_email">
+                                <i class="bi bi-envelope me-2"></i>Email
+                            </label>
+                        </div>
+                        
+                        <div class="form-floating">
+                            <input type="password" name="password" class="form-control form-control-lg" placeholder="Digite sua senha" required id="id_password">
+                            <label for="id_password">
+                                <i class="bi bi-lock me-2"></i>Senha
+                            </label>
+                        </div>
+                        
+                        <div class="remember-me">
+                            <div class="form-check">
+                                <input type="checkbox" name="remember_me" class="form-check-input" id="id_remember_me">
+                                <label class="form-check-label" for="id_remember_me">
+                                    Lembrar de mim
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-login">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>
+                            Entrar
+                        </button>
+                    </form>
+                    
+                    <div class="register-link">
+                        <p class="mb-0">
+                            Não tem uma conta? 
+                            <a href="/accounts/register/">Criar conta</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Theme switching
+        document.querySelectorAll('[data-bs-theme-value]').forEach(toggle => {
+            toggle.addEventListener('click', (e) => {
+                e.preventDefault()
+                const theme = toggle.getAttribute('data-bs-theme-value')
+                localStorage.setItem('theme', theme)
+                setTheme(theme)
+            })
+        })
+        
+        // Form handling
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const submitBtn = this.querySelector('button[type="submit"]')
+            submitBtn.disabled = true
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Entrando...'
+        })
+        
+        // Auto-dismiss alerts
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(alert => {
+                const bsAlert = new bootstrap.Alert(alert)
+                bsAlert.close()
+            })
+        }, 5000)
+    </script>
+
+
+<link rel="stylesheet" href="/static/debug_toolbar/css/print.css" media="print">
+<link rel="stylesheet" href="/static/debug_toolbar/css/toolbar.css">
+
+
+<script type="module" src="/static/debug_toolbar/js/toolbar.js" async></script>
+
+<div id="djDebug" class="djdt-hidden" dir="ltr"
+     
+     data-store-id="4605a3887e6b41e99035052d18a1cfa2"
+     data-render-panel-url="/__debug__/render_panel/"
+     
+     
+     
+     data-sidebar-url="/__debug__/history_sidebar/"
+     
+     data-default-show="true"
+     >
+  <div class="djdt-hidden" id="djDebugToolbar">
+    <ul id="djDebugPanelList">
+      <li><a id="djHideToolBarButton" href="#" title="Ocultar barra de ferramentas">Esconder »</a></li>
+      
+        
+
+<li id="djdt-HistoryPanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtHistoryPanel" checked title="Desativar para próximas requisições">
+  
+    <a href="#" title="Histórico" class="HistoryPanel">
+  
+  Histórico
+  
+    
+      <br><small>/accounts/login/</small>
+    
+  
+  
+    </a>
+  
+</li>
+
+      
+        
+
+<li id="djdt-VersionsPanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtVersionsPanel" checked title="Desativar para próximas requisições">
+  
+    <a href="#" title="Versões" class="VersionsPanel">
+  
+  Versões
+  
+    
+      <br><small>Django 4.2.7</small>
+    
+  
+  
+    </a>
+  
+</li>
+
+      
+        
+
+<li id="djdt-TimerPanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtTimerPanel" checked title="Desativar para próximas requisições">
+  
+    <a href="#" title="Tempo" class="TimerPanel">
+  
+  Tempo
+  
+    
+      <br><small>CPU: 5.58ms (5.59ms)</small>
+    
+  
+  
+    </a>
+  
+</li>
+
+      
+        
+
+<li id="djdt-SettingsPanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtSettingsPanel" checked title="Desativar para próximas requisições">
+  
+    <a href="#" title="Settings from config.settings.development" class="SettingsPanel">
+  
+  Configurações
+  
+    
+      
+    
+  
+  
+    </a>
+  
+</li>
+
+      
+        
+
+<li id="djdt-HeadersPanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtHeadersPanel" checked title="Desativar para próximas requisições">
+  
+    <a href="#" title="Cabeçalhos" class="HeadersPanel">
+  
+  Cabeçalhos
+  
+    
+      
+    
+  
+  
+    </a>
+  
+</li>
+
+      
+        
+
+<li id="djdt-RequestPanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtRequestPanel" checked title="Desativar para próximas requisições">
+  
+    <a href="#" title="Requisição" class="RequestPanel">
+  
+  Requisição
+  
+    
+      <br><small>login_view</small>
+    
+  
+  
+    </a>
+  
+</li>
+
+      
+        
+
+<li id="djdt-SQLPanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtSQLPanel" checked title="Desativar para próximas requisições">
+  
+    <a href="#" title="SQL queries from 0 connections" class="SQLPanel">
+  
+  SQL
+  
+    
+      <br><small>0 queries in 0.00ms</small>
+    
+  
+  
+    </a>
+  
+</li>
+
+      
+        
+
+<li id="djdt-StaticFilesPanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtStaticFilesPanel" checked title="Desativar para próximas requisições">
+  
+    <a href="#" title="Arquivos estáticos (137 encontrados, 0 sendo utilizados)" class="StaticFilesPanel">
+  
+  Arquivos estáticos
+  
+    
+      <br><small>0 arquivo utilizado</small>
+    
+  
+  
+    </a>
+  
+</li>
+
+      
+        
+
+<li id="djdt-TemplatesPanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtTemplatesPanel" checked title="Desativar para próximas requisições">
+  
+    <a href="#" title="Templates (1 renderizados)" class="TemplatesPanel">
+  
+  Templates
+  
+    
+      <br><small>accounts/login.html</small>
+    
+  
+  
+    </a>
+  
+</li>
+
+      
+        
+
+<li id="djdt-CachePanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtCachePanel" checked title="Desativar para próximas requisições">
+  
+    <a href="#" title="Chamadas ao cache de 1 backend" class="CachePanel">
+  
+  Cache
+  
+    
+      <br><small>0 chamada em 0.00ms</small>
+    
+  
+  
+    </a>
+  
+</li>
+
+      
+        
+
+<li id="djdt-SignalsPanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtSignalsPanel" checked title="Desativar para próximas requisições">
+  
+    <a href="#" title="Sinais" class="SignalsPanel">
+  
+  Sinais
+  
+    
+      <br><small>34 receptores de 15 sinais</small>
+    
+  
+  
+    </a>
+  
+</li>
+
+      
+        
+
+<li id="djdt-RedirectsPanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtRedirectsPanel" title="Habilitar para próximas requisições">
+  
+    <div class="djdt-contentless djdt-disabled">
+  
+  Interceptar redirecionamentos
+  
+  
+    </div>
+  
+</li>
+
+      
+        
+
+<li id="djdt-ProfilingPanel" class="djDebugPanelButton">
+  <input type="checkbox" data-cookie="djdtProfilingPanel" title="Habilitar para próximas requisições">
+  
+    <div class="djdt-contentless djdt-disabled">
+  
+  Profiling
+  
+  
+    </div>
+  
+</li>
+
+      
+    </ul>
+  </div>
+  <div class="djdt-hidden" id="djDebugToolbarHandle">
+    <div title="Mostrar barra de ferramentas" id="djShowToolBarButton">
+      <span id="djShowToolBarD">D</span><span id="djShowToolBarJ">J</span>DT
+    </div>
+  </div>
+
+  
+    
+
+
+  <div id="HistoryPanel" class="djdt-panelContent djdt-hidden">
+    <div class="djDebugPanelTitle">
+      <button type="button" class="djDebugClose">×</button>
+      <h3>Histórico</h3>
+    </div>
+    <div class="djDebugPanelContent">
+      
+        <div class="djdt-loader"></div>
+        <div class="djdt-scroll"></div>
+      
+    </div>
+  </div>
+
+
+  
+    
+
+
+  <div id="VersionsPanel" class="djdt-panelContent djdt-hidden">
+    <div class="djDebugPanelTitle">
+      <button type="button" class="djDebugClose">×</button>
+      <h3>Versões</h3>
+    </div>
+    <div class="djDebugPanelContent">
+      
+        <div class="djdt-loader"></div>
+        <div class="djdt-scroll"></div>
+      
+    </div>
+  </div>
+
+
+  
+    
+
+
+  <div id="TimerPanel" class="djdt-panelContent djdt-hidden">
+    <div class="djDebugPanelTitle">
+      <button type="button" class="djDebugClose">×</button>
+      <h3>Tempo</h3>
+    </div>
+    <div class="djDebugPanelContent">
+      
+        <div class="djdt-loader"></div>
+        <div class="djdt-scroll"></div>
+      
+    </div>
+  </div>
+
+
+  
+    
+
+
+  <div id="SettingsPanel" class="djdt-panelContent djdt-hidden">
+    <div class="djDebugPanelTitle">
+      <button type="button" class="djDebugClose">×</button>
+      <h3>Settings from config.settings.development</h3>
+    </div>
+    <div class="djDebugPanelContent">
+      
+        <div class="djdt-loader"></div>
+        <div class="djdt-scroll"></div>
+      
+    </div>
+  </div>
+
+
+  
+    
+
+
+  <div id="HeadersPanel" class="djdt-panelContent djdt-hidden">
+    <div class="djDebugPanelTitle">
+      <button type="button" class="djDebugClose">×</button>
+      <h3>Cabeçalhos</h3>
+    </div>
+    <div class="djDebugPanelContent">
+      
+        <div class="djdt-loader"></div>
+        <div class="djdt-scroll"></div>
+      
+    </div>
+  </div>
+
+
+  
+    
+
+
+  <div id="RequestPanel" class="djdt-panelContent djdt-hidden">
+    <div class="djDebugPanelTitle">
+      <button type="button" class="djDebugClose">×</button>
+      <h3>Requisição</h3>
+    </div>
+    <div class="djDebugPanelContent">
+      
+        <div class="djdt-loader"></div>
+        <div class="djdt-scroll"></div>
+      
+    </div>
+  </div>
+
+
+  
+    
+
+
+  <div id="SQLPanel" class="djdt-panelContent djdt-hidden">
+    <div class="djDebugPanelTitle">
+      <button type="button" class="djDebugClose">×</button>
+      <h3>SQL queries from 0 connections</h3>
+    </div>
+    <div class="djDebugPanelContent">
+      
+        <div class="djdt-loader"></div>
+        <div class="djdt-scroll"></div>
+      
+    </div>
+  </div>
+
+
+  
+    
+
+
+  <div id="StaticFilesPanel" class="djdt-panelContent djdt-hidden">
+    <div class="djDebugPanelTitle">
+      <button type="button" class="djDebugClose">×</button>
+      <h3>Arquivos estáticos (137 encontrados, 0 sendo utilizados)</h3>
+    </div>
+    <div class="djDebugPanelContent">
+      
+        <div class="djdt-loader"></div>
+        <div class="djdt-scroll"></div>
+      
+    </div>
+  </div>
+
+
+  
+    
+
+
+  <div id="TemplatesPanel" class="djdt-panelContent djdt-hidden">
+    <div class="djDebugPanelTitle">
+      <button type="button" class="djDebugClose">×</button>
+      <h3>Templates (1 renderizados)</h3>
+    </div>
+    <div class="djDebugPanelContent">
+      
+        <div class="djdt-loader"></div>
+        <div class="djdt-scroll"></div>
+      
+    </div>
+  </div>
+
+
+  
+    
+
+
+  <div id="CachePanel" class="djdt-panelContent djdt-hidden">
+    <div class="djDebugPanelTitle">
+      <button type="button" class="djDebugClose">×</button>
+      <h3>Chamadas ao cache de 1 backend</h3>
+    </div>
+    <div class="djDebugPanelContent">
+      
+        <div class="djdt-loader"></div>
+        <div class="djdt-scroll"></div>
+      
+    </div>
+  </div>
+
+
+  
+    
+
+
+  <div id="SignalsPanel" class="djdt-panelContent djdt-hidden">
+    <div class="djDebugPanelTitle">
+      <button type="button" class="djDebugClose">×</button>
+      <h3>Sinais</h3>
+    </div>
+    <div class="djDebugPanelContent">
+      
+        <div class="djdt-loader"></div>
+        <div class="djdt-scroll"></div>
+      
+    </div>
+  </div>
+
+
+  
+    
+
+
+
+  
+    
+
+
+
+  
+  <div id="djDebugWindow" class="djdt-panelContent djdt-hidden"></div>
+</div>
+</body>
+</html>
