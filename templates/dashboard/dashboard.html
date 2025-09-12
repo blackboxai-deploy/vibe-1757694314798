@@ -1,0 +1,598 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Sistema de Gerenciamento de Estoque{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block page_actions %}
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-primary btn-sm" onclick="refreshDashboard()">
+            <i class="bi bi-arrow-clockwise me-1"></i>
+            Atualizar
+        </button>
+        <div class="dropdown">
+            <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-download me-1"></i>
+                Exportar
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{% url 'analytics:export_estoque_excel' %}">
+                    <i class="bi bi-file-earmark-spreadsheet me-2"></i>Relatório de Estoque
+                </a></li>
+                <li><a class="dropdown-item" href="{% url 'analytics:export_vencimentos_excel' %}">
+                    <i class="bi bi-calendar-x me-2"></i>Produtos Vencendo
+                </a></li>
+            </ul>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .dashboard-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    .stat-card {
+        border-left: 4px solid;
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    }
+    
+    [data-bs-theme="dark"] .stat-card {
+        background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+    }
+    
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1;
+        margin: 0.5rem 0;
+    }
+    
+    .stat-label {
+        color: var(--bs-gray-600);
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    [data-bs-theme="dark"] .stat-label {
+        color: var(--bs-gray-300);
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+    
+    .table-container {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .badge-status {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .priority-high {
+        background-color: #dc3545;
+        color: white;
+    }
+    
+    .priority-medium {
+        background-color: #ffc107;
+        color: #000;
+    }
+    
+    .priority-low {
+        background-color: #198754;
+        color: white;
+    }
+    
+    .alert-card {
+        border: none;
+        border-radius: 12px;
+        border-left: 4px solid;
+    }
+    
+    .alert-danger {
+        border-left-color: #dc3545;
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+    
+    .alert-warning {
+        border-left-color: #ffc107;
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+    
+    .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.8);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+    }
+    
+    [data-bs-theme="dark"] .loading-overlay {
+        background: rgba(33, 37, 41, 0.8);
+    }
+    
+    .product-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.75rem;
+        color: white;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card stat-card border-primary">
+            <div class="card-body d-flex align-items-center">
+                <div class="stat-icon bg-primary me-3">
+                    <i class="bi bi-boxes"></i>
+                </div>
+                <div>
+                    <div class="stat-number text-primary">{{ total_products }}</div>
+                    <div class="stat-label">Total de Produtos</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card stat-card border-success">
+            <div class="card-body d-flex align-items-center">
+                <div class="stat-icon bg-success me-3">
+                    <i class="bi bi-stack"></i>
+                </div>
+                <div>
+                    <div class="stat-number text-success">{{ total_stock_items }}</div>
+                    <div class="stat-label">Itens em Estoque</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card stat-card border-warning">
+            <div class="card-body d-flex align-items-center">
+                <div class="stat-icon bg-warning me-3">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+                <div>
+                    <div class="stat-number text-warning">{{ expiring_soon|length }}</div>
+                    <div class="stat-label">Próximos ao Vencimento</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card stat-card border-danger">
+            <div class="card-body d-flex align-items-center">
+                <div class="stat-icon bg-danger me-3">
+                    <i class="bi bi-arrow-down"></i>
+                </div>
+                <div>
+                    <div class="stat-number text-danger">{{ low_stock|length }}</div>
+                    <div class="stat-label">Estoque Baixo</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alerts Section -->
+{% if expiring_soon or low_stock %}
+<div class="row mb-4">
+    {% if expiring_soon %}
+    <div class="col-lg-6 mb-3">
+        <div class="alert alert-warning alert-card">
+            <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-calendar-x me-2"></i>
+                <strong>Produtos Próximos ao Vencimento</strong>
+            </div>
+            <p class="mb-2">{{ expiring_soon|length }} produto{{ expiring_soon|length|pluralize:"s" }} vencendo nos próximos 30 dias.</p>
+            <a href="{% url 'analytics:relatorio_vencimentos' %}" class="btn btn-outline-warning btn-sm">
+                Ver Detalhes
+            </a>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if low_stock %}
+    <div class="col-lg-6 mb-3">
+        <div class="alert alert-danger alert-card">
+            <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-arrow-down-circle me-2"></i>
+                <strong>Produtos com Estoque Baixo</strong>
+            </div>
+            <p class="mb-2">{{ low_stock|length }} produto{{ low_stock|length|pluralize:"s" }} com estoque abaixo do mínimo.</p>
+            <a href="{% url 'analytics:relatorio_estoque' %}" class="btn btn-outline-danger btn-sm">
+                Ver Detalhes
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Charts and Tables Row -->
+<div class="row mb-4">
+    <!-- Recent Movements -->
+    <div class="col-lg-8 mb-3">
+        <div class="card dashboard-card">
+            <div class="card-header bg-transparent border-0 pb-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-activity me-2"></i>
+                        Movimentações Recentes
+                    </h6>
+                    <a href="{% url 'inventory:movimentacao' %}" class="btn btn-outline-primary btn-sm">
+                        Ver Todas
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-container">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Produto</th>
+                                <th>Tipo</th>
+                                <th>Quantidade</th>
+                                <th>Usuário</th>
+                                <th>Data</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for movimento in recent_movements %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="product-avatar me-2">
+                                            {{ movimento.produto.codigo_produto|slice:":2" }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold">{{ movimento.produto.codigo_produto }}</div>
+                                            <small class="text-muted">{{ movimento.produto.nome_produto|truncatechars:30 }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge badge-status 
+                                        {% if movimento.tipo_movimentacao == 'entrada' %}bg-success
+                                        {% elif movimento.tipo_movimentacao == 'saida' %}bg-danger
+                                        {% elif movimento.tipo_movimentacao == 'transferencia' %}bg-primary
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ movimento.get_tipo_movimentacao_display }}
+                                    </span>
+                                </td>
+                                <td class="fw-semibold">{{ movimento.quantidade }}</td>
+                                <td>{{ movimento.usuario.get_full_name|default:movimento.usuario.username }}</td>
+                                <td>
+                                    <small class="text-muted">
+                                        {{ movimento.data_movimentacao|date:"d/m/Y H:i" }}
+                                    </small>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox display-6 d-block mb-2"></i>
+                                    Nenhuma movimentação recente
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="col-lg-4 mb-3">
+        <div class="card dashboard-card">
+            <div class="card-header bg-transparent border-0 pb-0">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-lightning me-2"></i>
+                    Ações Rápidas
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if user.is_superuser or 'entrada' in user_permissions %}
+                    <a href="{% url 'inventory:entrada' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-down-circle me-2"></i>
+                        Processar Entrada
+                    </a>
+                    {% endif %}
+                    
+                    {% if user.is_superuser or 'movimentacao' in user_permissions %}
+                    <a href="{% url 'inventory:nova_movimentacao' %}" class="btn btn-outline-success">
+                        <i class="bi bi-arrow-left-right me-2"></i>
+                        Nova Movimentação
+                    </a>
+                    {% endif %}
+                    
+                    {% if user.is_superuser or 'produtos' in user_permissions %}
+                    <a href="{% url 'inventory:produto_create' %}" class="btn btn-outline-info">
+                        <i class="bi bi-plus-circle me-2"></i>
+                        Novo Produto
+                    </a>
+                    {% endif %}
+                    
+                    {% if user.is_superuser or 'fornecedores' in user_permissions %}
+                    <a href="{% url 'inventory:fornecedor_create' %}" class="btn btn-outline-warning">
+                        <i class="bi bi-truck me-2"></i>
+                        Novo Fornecedor
+                    </a>
+                    {% endif %}
+                    
+                    {% if user.is_superuser %}
+                    <a href="/admin/inventory/notafiscal/add/" target="_blank" class="btn btn-outline-secondary">
+                        <i class="bi bi-receipt me-2"></i>
+                        Nova Nota Fiscal
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- System Info -->
+        <div class="card dashboard-card mt-3">
+            <div class="card-header bg-transparent border-0 pb-0">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Informações do Sistema
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="small">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Versão:</span>
+                        <strong>1.0.0</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Último Login:</span>
+                        <strong>{{ user.last_login|date:"d/m/Y H:i"|default:"Nunca" }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Usuário:</span>
+                        <strong>{{ user.get_full_name|default:user.username }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Permissões:</span>
+                        <strong>
+                            {% if user.is_superuser %}
+                                Administrador
+                            {% else %}
+                                {{ user.user_permissions.count }} módulo{{ user.user_permissions.count|pluralize:"s" }}
+                            {% endif %}
+                        </strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Products Expiring Soon -->
+{% if expiring_soon %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card dashboard-card">
+            <div class="card-header bg-transparent border-0 pb-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-calendar-x me-2 text-warning"></i>
+                        Produtos Próximos ao Vencimento
+                    </h6>
+                    <a href="{% url 'analytics:relatorio_vencimentos' %}" class="btn btn-outline-warning btn-sm">
+                        Ver Relatório Completo
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-container">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Produto</th>
+                                <th>Lote</th>
+                                <th>Quantidade</th>
+                                <th>Data de Validade</th>
+                                <th>Dias Restantes</th>
+                                <th>Prioridade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for estoque in expiring_soon %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="product-avatar me-2">
+                                            {{ estoque.produto.codigo_produto|slice:":2" }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold">{{ estoque.produto.codigo_produto }}</div>
+                                            <small class="text-muted">{{ estoque.produto.nome_produto|truncatechars:40 }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="fw-semibold">{{ estoque.lote }}</td>
+                                <td>{{ estoque.quantidade }} {{ estoque.produto.unidade_medida }}</td>
+                                <td>{{ estoque.data_validade|date:"d/m/Y" }}</td>
+                                <td>
+                                    <strong class="
+                                        {% if estoque.dias_para_vencimento <= 7 %}text-danger
+                                        {% elif estoque.dias_para_vencimento <= 15 %}text-warning
+                                        {% else %}text-info{% endif %}">
+                                        {{ estoque.dias_para_vencimento }} dias
+                                    </strong>
+                                </td>
+                                <td>
+                                    <span class="badge 
+                                        {% if estoque.dias_para_vencimento <= 7 %}priority-high
+                                        {% elif estoque.dias_para_vencimento <= 15 %}priority-medium
+                                        {% else %}priority-low{% endif %}">
+                                        {% if estoque.dias_para_vencimento <= 7 %}Alta
+                                        {% elif estoque.dias_para_vencimento <= 15 %}Média
+                                        {% else %}Baixa{% endif %}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Low Stock Products -->
+{% if low_stock %}
+<div class="row">
+    <div class="col-12">
+        <div class="card dashboard-card">
+            <div class="card-header bg-transparent border-0 pb-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-arrow-down-circle me-2 text-danger"></i>
+                        Produtos com Estoque Baixo
+                    </h6>
+                    <a href="{% url 'analytics:relatorio_estoque' %}" class="btn btn-outline-danger btn-sm">
+                        Ver Relatório Completo
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-container">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Produto</th>
+                                <th>Estoque Atual</th>
+                                <th>Estoque Mínimo</th>
+                                <th>Status</th>
+                                <th>Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for estoque in low_stock %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="product-avatar me-2">
+                                            {{ estoque.produto.codigo_produto|slice:":2" }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold">{{ estoque.produto.codigo_produto }}</div>
+                                            <small class="text-muted">{{ estoque.produto.nome_produto|truncatechars:40 }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="fw-semibold text-danger">{{ estoque.quantidade }} {{ estoque.produto.unidade_medida }}</td>
+                                <td>{{ estoque.produto.estoque_minimo }} {{ estoque.produto.unidade_medida }}</td>
+                                <td>
+                                    <span class="badge bg-danger">
+                                        Estoque Baixo
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'inventory:produto_detail' estoque.produto.id %}" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        Ver Detalhes
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Refresh dashboard function
+    function refreshDashboard() {
+        const refreshBtn = document.querySelector('[onclick="refreshDashboard()"]')
+        if (refreshBtn) {
+            refreshBtn.disabled = true
+            refreshBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Atualizando...'
+        }
+        
+        // Reload page after a short delay
+        setTimeout(() => {
+            location.reload()
+        }, 500)
+    }
+    
+    // Auto-refresh every 5 minutes
+    setInterval(refreshDashboard, 300000)
+    
+    // Initialize tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+        const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        tooltips.forEach(tooltip => {
+            new bootstrap.Tooltip(tooltip)
+        })
+    })
+    
+    // Add some interactivity to stat cards
+    document.querySelectorAll('.stat-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const icon = this.querySelector('.stat-icon i')
+            if (icon) {
+                icon.classList.add('pulse-animation')
+                setTimeout(() => {
+                    icon.classList.remove('pulse-animation')
+                }, 1000)
+            }
+        })
+    })
+</script>
+{% endblock %}
