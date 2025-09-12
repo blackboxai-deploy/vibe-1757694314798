@@ -1,0 +1,868 @@
+{% extends 'base.html' %}
+
+{% block title %}Análise de Qualidade - Sistema de Gerenciamento de Estoque{% endblock %}
+
+{% block page_title %}Análise de Qualidade{% endblock %}
+
+{% block page_actions %}
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-primary btn-sm" onclick="location.reload()">
+            <i class="bi bi-arrow-clockwise me-1"></i>
+            Atualizar
+        </button>
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-download me-1"></i>
+                Exportar
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#">
+                    <i class="bi bi-file-earmark-spreadsheet me-2"></i>Relatório de Análises
+                </a></li>
+            </ul>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .analysis-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        transition: all 0.3s ease;
+        margin-bottom: 1rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .analysis-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    .analysis-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+    }
+    
+    .analysis-iniciada::before {
+        background: #ffc107;
+    }
+    
+    .analysis-em_andamento::before {
+        background: #0d6efd;
+    }
+    
+    .analysis-concluida::before {
+        background: #198754;
+    }
+    
+    .analysis-cancelada::before {
+        background: #dc3545;
+    }
+    
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 6px;
+        font-weight: 500;
+    }
+    
+    .status-iniciada {
+        background: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+        border: 1px solid rgba(255, 193, 7, 0.2);
+    }
+    
+    .status-em_andamento {
+        background: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+        border: 1px solid rgba(13, 110, 253, 0.2);
+    }
+    
+    .status-concluida {
+        background: rgba(25, 135, 84, 0.1);
+        color: #198754;
+        border: 1px solid rgba(25, 135, 84, 0.2);
+    }
+    
+    .status-cancelada {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+        border: 1px solid rgba(220, 53, 69, 0.2);
+    }
+    
+    .result-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 6px;
+        font-weight: 500;
+    }
+    
+    .result-aprovado {
+        background: rgba(25, 135, 84, 0.1);
+        color: #198754;
+        border: 1px solid rgba(25, 135, 84, 0.2);
+    }
+    
+    .result-reprovado {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+        border: 1px solid rgba(220, 53, 69, 0.2);
+    }
+    
+    .result-aprovado_condicional {
+        background: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+        border: 1px solid rgba(255, 193, 7, 0.2);
+    }
+    
+    .product-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .product-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: white;
+        margin-right: 0.75rem;
+    }
+    
+    .analysis-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        text-align: center;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        border-radius: 12px;
+        border: 1px solid var(--bs-gray-200);
+        transition: all 0.3s ease;
+    }
+    
+    [data-bs-theme="dark"] .stat-card {
+        background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+        border-color: var(--bs-gray-700);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-label {
+        color: var(--bs-gray-600);
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    [data-bs-theme="dark"] .stat-label {
+        color: var(--bs-gray-300);
+    }
+    
+    .priority-indicator {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+    
+    .priority-high {
+        background: #dc3545;
+    }
+    
+    .priority-medium {
+        background: #ffc107;
+    }
+    
+    .priority-low {
+        background: #198754;
+    }
+    
+    .analysis-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    
+    .batch-info {
+        background: var(--bs-gray-50);
+        padding: 0.75rem;
+        border-radius: 6px;
+        margin: 0.75rem 0;
+        font-size: 0.875rem;
+    }
+    
+    [data-bs-theme="dark"] .batch-info {
+        background: var(--bs-gray-700);
+    }
+    
+    .analyst-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        color: var(--bs-gray-600);
+    }
+    
+    [data-bs-theme="dark"] .analyst-info {
+        color: var(--bs-gray-400);
+    }
+    
+    .analyst-avatar {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--bs-primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.625rem;
+        font-weight: 600;
+    }
+    
+    .analysis-timeline {
+        font-size: 0.75rem;
+        color: var(--bs-gray-500);
+    }
+    
+    [data-bs-theme="dark"] .analysis-timeline {
+        color: var(--bs-gray-400);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Analysis Statistics -->
+        <div class="analysis-stats">
+            <div class="stat-card">
+                <div class="stat-number text-warning">8</div>
+                <div class="stat-label">Aguardando Análise</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number text-primary">12</div>
+                <div class="stat-label">Em Andamento</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number text-success">45</div>
+                <div class="stat-label">Aprovadas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number text-danger">3</div>
+                <div class="stat-label">Reprovadas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number text-info">2.5</div>
+                <div class="stat-label">Dias Médios</div>
+            </div>
+        </div>
+
+        <!-- Analysis List -->
+        <div class="card">
+            <div class="card-header bg-transparent border-0 pb-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-microscope me-2"></i>
+                        Análises de Qualidade
+                    </h6>
+                    <div class="d-flex gap-2">
+                        <select class="form-select form-select-sm" style="width: auto;">
+                            <option value="">Todos os Status</option>
+                            <option value="iniciada">Iniciadas</option>
+                            <option value="em_andamento">Em Andamento</option>
+                            <option value="concluida">Concluídas</option>
+                            <option value="cancelada">Canceladas</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Sample Analysis Cards -->
+                <div class="row">
+                    <!-- Analysis 1 - Em Andamento -->
+                    <div class="col-lg-6 col-xl-4">
+                        <div class="analysis-card card analysis-em_andamento">
+                            <div class="priority-indicator priority-high"></div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <div class="fw-semibold">AN 202409001</div>
+                                        <div class="analysis-timeline">Iniciada há 2 dias</div>
+                                    </div>
+                                    <span class="status-badge status-em_andamento">Em Andamento</span>
+                                </div>
+                                
+                                <div class="product-info">
+                                    <div class="product-avatar">QU</div>
+                                    <div>
+                                        <div class="fw-semibold">QU-001</div>
+                                        <small class="text-muted">Ácido Sulfúrico 98%</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="batch-info">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <strong>Lote:</strong> L20240910001
+                                        </div>
+                                        <div class="col-6">
+                                            <strong>Qtd:</strong> 50 L
+                                        </div>
+                                        <div class="col-6">
+                                            <strong>Fabricação:</strong> 05/09/2024
+                                        </div>
+                                        <div class="col-6">
+                                            <strong>Validade:</strong> 05/09/2026
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="analyst-info">
+                                    <div class="analyst-avatar">MT</div>
+                                    <span>Maria Técnica</span>
+                                </div>
+                                
+                                <div class="analysis-actions">
+                                    <button class="btn btn-outline-primary btn-sm flex-fill">
+                                        <i class="bi bi-eye me-1"></i>
+                                        Detalhes
+                                    </button>
+                                    <button class="btn btn-primary btn-sm flex-fill">
+                                        <i class="bi bi-check-circle me-1"></i>
+                                        Finalizar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Analysis 2 - Iniciada -->
+                    <div class="col-lg-6 col-xl-4">
+                        <div class="analysis-card card analysis-iniciada">
+                            <div class="priority-indicator priority-medium"></div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <div class="fw-semibold">AN 202409002</div>
+                                        <div class="analysis-timeline">Criada há 1 hora</div>
+                                    </div>
+                                    <span class="status-badge status-iniciada">Iniciada</span>
+                                </div>
+                                
+                                <div class="product-info">
+                                    <div class="product-avatar">MP</div>
+                                    <div>
+                                        <div class="fw-semibold">MP-005</div>
+                                        <small class="text-muted">Polímero PVC 100kg</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="batch-info">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <strong>Lote:</strong> L20240912002
+                                        </div>
+                                        <div class="col-6">
+                                            <strong>Qtd:</strong> 20 KG
+                                        </div>
+                                        <div class="col-6">
+                                            <strong>Fabricação:</strong> 08/09/2024
+                                        </div>
+                                        <div class="col-6">
+                                            <strong>Validade:</strong> 08/03/2025
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="alert alert-warning alert-sm py-2 px-3 mb-2">
+                                    <i class="bi bi-clock me-1"></i>
+                                    <small>Aguardando início da análise</small>
+                                </div>
+                                
+                                <div class="analysis-actions">
+                                    <button class="btn btn-outline-primary btn-sm flex-fill">
+                                        <i class="bi bi-eye me-1"></i>
+                                        Detalhes
+                                    </button>
+                                    <button class="btn btn-warning btn-sm flex-fill">
+                                        <i class="bi bi-play-circle me-1"></i>
+                                        Iniciar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Analysis 3 - Concluída Aprovada -->
+                    <div class="col-lg-6 col-xl-4">
+                        <div class="analysis-card card analysis-concluida">
+                            <div class="priority-indicator priority-low"></div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <div class="fw-semibold">AN 202409003</div>
+                                        <div class="analysis-timeline">Concluída há 3 horas</div>
+                                    </div>
+                                    <span class="status-badge status-concluida">Concluída</span>
+                                </div>
+                                
+                                <div class="product-info">
+                                    <div class="product-avatar">EM</div>
+                                    <div>
+                                        <div class="fw-semibold">EM-012</div>
+                                        <small class="text-muted">Embalagem 500ml</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="batch-info">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <strong>Lote:</strong> L20240908001
+                                        </div>
+                                        <div class="col-6">
+                                            <strong>Qtd:</strong> 1000 UN
+                                        </div>
+                                        <div class="col-6">
+                                            <strong>Resultado:</strong>
+                                        </div>
+                                        <div class="col-6">
+                                            <span class="result-badge result-aprovado">Aprovado</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="analyst-info mb-2">
+                                    <div class="analyst-avatar">JL</div>
+                                    <span>João Laboratorista</span>
+                                </div>
+                                
+                                <div class="alert alert-success alert-sm py-2 px-3 mb-2">
+                                    <i class="bi bi-check-circle me-1"></i>
+                                    <small>Produto transferido para DEP. Industrial</small>
+                                </div>
+                                
+                                <div class="analysis-actions">
+                                    <button class="btn btn-outline-primary btn-sm flex-fill">
+                                        <i class="bi bi-file-earmark-text me-1"></i>
+                                        Ver Laudo
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Analysis 4 - Concluída Reprovada -->
+                    <div class="col-lg-6 col-xl-4">
+                        <div class="analysis-card card analysis-concluida">
+                            <div class="priority-indicator priority-high"></div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <div class="fw-semibold">AN 202409004</div>
+                                        <div class="analysis-timeline">Concluída há 1 dia</div>
+                                    </div>
+                                    <span class="status-badge status-concluida">Concluída</span>
+                                </div>
+                                
+                                <div class="product-info">
+                                    <div class="product-avatar">QU</div>
+                                    <div>
+                                        <div class="fw-semibold">QU-007</div>
+                                        <small class="text-muted">Reagente Químico X</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="batch-info">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <strong>Lote:</strong> L20240905001
+                                        </div>
+                                        <div class="col-6">
+                                            <strong>Qtd:</strong> 25 L
+                                        </div>
+                                        <div class="col-6">
+                                            <strong>Resultado:</strong>
+                                        </div>
+                                        <div class="col-6">
+                                            <span class="result-badge result-reprovado">Reprovado</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="analyst-info mb-2">
+                                    <div class="analyst-avatar">MT</div>
+                                    <span>Maria Técnica</span>
+                                </div>
+                                
+                                <div class="alert alert-danger alert-sm py-2 px-3 mb-2">
+                                    <i class="bi bi-x-circle me-1"></i>
+                                    <small>Produto bloqueado para descarte</small>
+                                </div>
+                                
+                                <div class="analysis-actions">
+                                    <button class="btn btn-outline-danger btn-sm flex-fill">
+                                        <i class="bi bi-file-earmark-text me-1"></i>
+                                        Ver Laudo
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Analysis 5 - Em Andamento -->
+                    <div class="col-lg-6 col-xl-4">
+                        <div class="analysis-card card analysis-em_andamento">
+                            <div class="priority-indicator priority-medium"></div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <div class="fw-semibold">AN 202409005</div>
+                                        <div class="analysis-timeline">Em andamento há 1 dia</div>
+                                    </div>
+                                    <span class="status-badge status-em_andamento">Em Andamento</span>
+                                </div>
+                                
+                                <div class="product-info">
+                                    <div class="product-avatar">MP</div>
+                                    <div>
+                                        <div class="fw-semibold">MP-010</div>
+                                        <small class="text-muted">Aditivo Especial</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="batch-info">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <strong>Lote:</strong> L20240911001
+                                        </div>
+                                        <div class="col-6">
+                                            <strong>Qtd:</strong> 10 KG
+                                        </div>
+                                        <div class="col-6">
+                                            <strong>Fabricação:</strong> 06/09/2024
+                                        </div>
+                                        <div class="col-6">
+                                            <strong>Validade:</strong> 06/09/2025
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="analyst-info mb-2">
+                                    <div class="analyst-avatar">JL</div>
+                                    <span>João Laboratorista</span>
+                                </div>
+                                
+                                <div class="alert alert-info alert-sm py-2 px-3 mb-2">
+                                    <i class="bi bi-hourglass-split me-1"></i>
+                                    <small>Testes físico-químicos em progresso</small>
+                                </div>
+                                
+                                <div class="analysis-actions">
+                                    <button class="btn btn-outline-primary btn-sm flex-fill">
+                                        <i class="bi bi-eye me-1"></i>
+                                        Detalhes
+                                    </button>
+                                    <button class="btn btn-primary btn-sm flex-fill">
+                                        <i class="bi bi-check-circle me-1"></i>
+                                        Finalizar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Analysis 6 - Aprovada Condicional -->
+                    <div class="col-lg-6 col-xl-4">
+                        <div class="analysis-card card analysis-concluida">
+                            <div class="priority-indicator priority-medium"></div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <div class="fw-semibold">AN 202409006</div>
+                                        <div class="analysis-timeline">Concluída há 5 horas</div>
+                                    </div>
+                                    <span class="status-badge status-concluida">Concluída</span>
+                                </div>
+                                
+                                <div class="product-info">
+                                    <div class="product-avatar">EM</div>
+                                    <div>
+                                        <div class="fw-semibold">EM-003</div>
+                                        <small class="text-muted">Tampa Plástica</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="batch-info">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <strong>Lote:</strong> L20240907001
+                                        </div>
+                                        <div class="col-6">
+                                            <strong>Qtd:</strong> 5000 UN
+                                        </div>
+                                        <div class="col-6">
+                                            <strong>Resultado:</strong>
+                                        </div>
+                                        <div class="col-6">
+                                            <span class="result-badge result-aprovado_condicional">Aprov. Condicional</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="analyst-info mb-2">
+                                    <div class="analyst-avatar">MT</div>
+                                    <span>Maria Técnica</span>
+                                </div>
+                                
+                                <div class="alert alert-warning alert-sm py-2 px-3 mb-2">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>
+                                    <small>Usar com cuidado - pequenos defeitos detectados</small>
+                                </div>
+                                
+                                <div class="analysis-actions">
+                                    <button class="btn btn-outline-warning btn-sm flex-fill">
+                                        <i class="bi bi-file-earmark-text me-1"></i>
+                                        Ver Laudo
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Instructions -->
+                <div class="alert alert-info mt-4">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-info-circle me-3 fs-4"></i>
+                        <div>
+                            <h6 class="alert-heading mb-1">Workflow de Análise</h6>
+                            <p class="mb-0">
+                                <strong>1. Iniciada:</strong> Produto enviado para análise após entrada. 
+                                <strong>2. Em Andamento:</strong> Testes sendo realizados pelo laboratório. 
+                                <strong>3. Concluída:</strong> Resultado final definido. 
+                                Produtos aprovados são automaticamente transferidos para o DEP. Industrial.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Analysis Result Modal -->
+<div class="modal fade" id="analysisModal" tabindex="-1" aria-labelledby="analysisModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="analysisModalLabel">
+                    <i class="bi bi-check-circle me-2"></i>
+                    Finalizar Análise de Qualidade
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="analysisForm">
+                    <div class="mb-3">
+                        <label class="form-label">Resultado da Análise</label>
+                        <select class="form-select" name="resultado" required>
+                            <option value="">Selecione o resultado</option>
+                            <option value="aprovado">Aprovado</option>
+                            <option value="reprovado">Reprovado</option>
+                            <option value="aprovado_condicional">Aprovado Condicional</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Laudo Técnico</label>
+                        <textarea class="form-control" name="laudo" rows="4" 
+                                  placeholder="Descreva os resultados dos testes e observações técnicas..."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Observações Adicionais</label>
+                        <textarea class="form-control" name="observacoes" rows="2" 
+                                  placeholder="Observações gerais sobre a análise (opcional)..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-success" id="confirmAnalysis">
+                    <i class="bi bi-check-circle me-2"></i>
+                    Finalizar Análise
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Finalize analysis button handlers
+    document.querySelectorAll('.btn-primary.btn-sm').forEach(btn => {
+        if (btn.textContent.includes('Finalizar')) {
+            btn.addEventListener('click', function() {
+                const analysisCard = this.closest('.analysis-card')
+                const analysisNumber = analysisCard.querySelector('.fw-semibold').textContent
+                
+                // Update modal title
+                document.getElementById('analysisModalLabel').innerHTML = `
+                    <i class="bi bi-check-circle me-2"></i>
+                    Finalizar Análise ${analysisNumber}
+                `
+                
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('analysisModal'))
+                modal.show()
+            })
+        }
+    })
+    
+    // Start analysis button handlers
+    document.querySelectorAll('.btn-warning.btn-sm').forEach(btn => {
+        if (btn.textContent.includes('Iniciar')) {
+            btn.addEventListener('click', function() {
+                this.disabled = true
+                this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Iniciando...'
+                
+                // Simulate starting analysis
+                setTimeout(() => {
+                    // Update card status
+                    const card = this.closest('.analysis-card')
+                    const statusBadge = card.querySelector('.status-badge')
+                    const alertDiv = card.querySelector('.alert-warning')
+                    
+                    statusBadge.className = 'status-badge status-em_andamento'
+                    statusBadge.textContent = 'Em Andamento'
+                    
+                    card.className = card.className.replace('analysis-iniciada', 'analysis-em_andamento')
+                    
+                    alertDiv.className = 'alert alert-info alert-sm py-2 px-3 mb-2'
+                    alertDiv.innerHTML = '<i class="bi bi-hourglass-split me-1"></i><small>Análise em progresso</small>'
+                    
+                    // Update button
+                    this.className = 'btn btn-primary btn-sm flex-fill'
+                    this.innerHTML = '<i class="bi bi-check-circle me-1"></i>Finalizar'
+                    this.disabled = false
+                    
+                    // Show success toast
+                    const toastDiv = document.createElement('div')
+                    toastDiv.className = 'toast position-fixed top-0 end-0 m-3'
+                    toastDiv.setAttribute('role', 'alert')
+                    toastDiv.innerHTML = `
+                        <div class="toast-header">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong class="me-auto">Análise Iniciada</strong>
+                            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                        </div>
+                        <div class="toast-body">
+                            Análise iniciada com sucesso!
+                        </div>
+                    `
+                    
+                    document.body.appendChild(toastDiv)
+                    const toast = new bootstrap.Toast(toastDiv)
+                    toast.show()
+                    
+                    // Remove toast after it's hidden
+                    toastDiv.addEventListener('hidden.bs.toast', () => {
+                        toastDiv.remove()
+                    })
+                }, 1500)
+            })
+        }
+    })
+    
+    // Confirm analysis handler
+    document.getElementById('confirmAnalysis')?.addEventListener('click', function() {
+        const form = document.getElementById('analysisForm')
+        const formData = new FormData(form)
+        const resultado = formData.get('resultado')
+        
+        if (!resultado) {
+            alert('Por favor, selecione o resultado da análise.')
+            return
+        }
+        
+        this.disabled = true
+        this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Finalizando...'
+        
+        // Simulate analysis completion
+        setTimeout(() => {
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('analysisModal')).hide()
+            
+            // Show success message
+            const alertDiv = document.createElement('div')
+            alertDiv.className = 'alert alert-success alert-dismissible fade show'
+            alertDiv.innerHTML = `
+                <i class="bi bi-check-circle me-2"></i>
+                <strong>Análise Finalizada!</strong> Resultado: ${resultado}. 
+                ${resultado === 'aprovado' ? 'Produto transferido para DEP. Industrial.' : 
+                  resultado === 'reprovado' ? 'Produto bloqueado para descarte.' : 
+                  'Produto aprovado com restrições.'}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `
+            
+            document.querySelector('.card-header').after(alertDiv)
+            
+            // Auto dismiss after 6 seconds
+            setTimeout(() => {
+                const alert = bootstrap.Alert.getInstance(alertDiv)
+                if (alert) alert.close()
+            }, 6000)
+            
+            // Reset form and button
+            form.reset()
+            this.disabled = false
+            this.innerHTML = '<i class="bi bi-check-circle me-2"></i>Finalizar Análise'
+        }, 2500)
+    })
+    
+    // Auto-refresh analysis status every 30 seconds
+    setInterval(() => {
+        // Update timelines
+        document.querySelectorAll('.analysis-timeline').forEach(timeline => {
+            const text = timeline.textContent
+            if (text.includes('há')) {
+                // Simulate time progression (simplified)
+                console.log('Updating timeline:', text)
+            }
+        })
+    }, 30000)
+</script>
+{% endblock %}
