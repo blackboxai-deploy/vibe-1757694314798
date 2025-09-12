@@ -1,0 +1,686 @@
+{% extends 'base.html' %}
+
+{% block title %}Movimentação de Estoque - Sistema de Gerenciamento de Estoque{% endblock %}
+
+{% block page_title %}Movimentação de Estoque{% endblock %}
+
+{% block page_actions %}
+    <div class="d-flex gap-2">
+        {% if user.is_superuser or 'movimentacao' in user_permissions %}
+        <a href="{% url 'inventory:nova_movimentacao' %}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-circle me-1"></i>
+            Nova Movimentação
+        </a>
+        {% endif %}
+        <button type="button" class="btn btn-outline-primary btn-sm" onclick="location.reload()">
+            <i class="bi bi-arrow-clockwise me-1"></i>
+            Atualizar
+        </button>
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-download me-1"></i>
+                Exportar
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{% url 'analytics:export_movimentacoes_excel' %}">
+                    <i class="bi bi-file-earmark-spreadsheet me-2"></i>Excel
+                </a></li>
+            </ul>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .movement-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        transition: all 0.3s ease;
+        margin-bottom: 1rem;
+        border-left: 4px solid;
+    }
+    
+    .movement-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    .movement-entrada {
+        border-left-color: #198754;
+    }
+    
+    .movement-saida {
+        border-left-color: #dc3545;
+    }
+    
+    .movement-transferencia {
+        border-left-color: #0d6efd;
+    }
+    
+    .movement-ajuste {
+        border-left-color: #ffc107;
+    }
+    
+    .movement-descarte {
+        border-left-color: #6c757d;
+    }
+    
+    .movement-type-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 6px;
+        font-weight: 500;
+    }
+    
+    .type-entrada {
+        background: rgba(25, 135, 84, 0.1);
+        color: #198754;
+        border: 1px solid rgba(25, 135, 84, 0.2);
+    }
+    
+    .type-saida {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+        border: 1px solid rgba(220, 53, 69, 0.2);
+    }
+    
+    .type-transferencia {
+        background: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+        border: 1px solid rgba(13, 110, 253, 0.2);
+    }
+    
+    .type-ajuste {
+        background: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+        border: 1px solid rgba(255, 193, 7, 0.2);
+    }
+    
+    .type-descarte {
+        background: rgba(108, 117, 125, 0.1);
+        color: #6c757d;
+        border: 1px solid rgba(108, 117, 125, 0.2);
+    }
+    
+    .product-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .product-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: white;
+        margin-right: 0.75rem;
+    }
+    
+    .department-flow {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0.75rem 0;
+    }
+    
+    .department-badge {
+        background: var(--bs-gray-100);
+        color: var(--bs-gray-700);
+        padding: 0.25rem 0.5rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        border: 1px solid var(--bs-gray-300);
+    }
+    
+    [data-bs-theme="dark"] .department-badge {
+        background: var(--bs-gray-700);
+        color: var(--bs-gray-200);
+        border-color: var(--bs-gray-600);
+    }
+    
+    .flow-arrow {
+        color: var(--bs-gray-400);
+    }
+    
+    .movement-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        text-align: center;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        border-radius: 12px;
+        border: 1px solid var(--bs-gray-200);
+        transition: all 0.3s ease;
+    }
+    
+    [data-bs-theme="dark"] .stat-card {
+        background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+        border-color: var(--bs-gray-700);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-label {
+        color: var(--bs-gray-600);
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    [data-bs-theme="dark"] .stat-label {
+        color: var(--bs-gray-300);
+    }
+    
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        color: var(--bs-gray-600);
+    }
+    
+    [data-bs-theme="dark"] .user-info {
+        color: var(--bs-gray-400);
+    }
+    
+    .user-avatar {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--bs-primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.625rem;
+        font-weight: 600;
+    }
+    
+    .filter-section {
+        background: var(--bs-gray-50);
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--bs-gray-200);
+    }
+    
+    [data-bs-theme="dark"] .filter-section {
+        background: var(--bs-gray-800);
+        border-color: var(--bs-gray-700);
+    }
+    
+    .quantity-display {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    
+    .quantity-positive {
+        color: #198754;
+    }
+    
+    .quantity-negative {
+        color: #dc3545;
+    }
+    
+    .quantity-neutral {
+        color: #0d6efd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Movement Statistics -->
+        <div class="movement-stats">
+            <div class="stat-card">
+                <div class="stat-number text-success">127</div>
+                <div class="stat-label">Entradas Hoje</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number text-danger">43</div>
+                <div class="stat-label">Saídas Hoje</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number text-primary">89</div>
+                <div class="stat-label">Transferências</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number text-warning">12</div>
+                <div class="stat-label">Ajustes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number text-secondary">5</div>
+                <div class="stat-label">Descartes</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-section">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <select class="form-select form-select-sm" id="filterType">
+                        <option value="">Todos os Tipos</option>
+                        <option value="entrada">Entrada</option>
+                        <option value="saida">Saída</option>
+                        <option value="transferencia">Transferência</option>
+                        <option value="ajuste">Ajuste</option>
+                        <option value="descarte">Descarte</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select form-select-sm" id="filterDepartment">
+                        <option value="">Todos os Departamentos</option>
+                        <option value="estoque">DEP. Estoque</option>
+                        <option value="analise">DEP. Análise</option>
+                        <option value="laboratorio">DEP. Laboratório</option>
+                        <option value="industrial">DEP. Industrial</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <input type="date" class="form-control form-control-sm" id="filterDate">
+                </div>
+                <div class="col-md-3">
+                    <input type="text" class="form-control form-control-sm" placeholder="Buscar produto..." id="searchProduct">
+                </div>
+            </div>
+        </div>
+
+        <!-- Movements List -->
+        <div class="card">
+            <div class="card-header bg-transparent border-0 pb-0">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-activity me-2"></i>
+                    Movimentações Recentes
+                </h6>
+            </div>
+            <div class="card-body">
+                <!-- Sample Movement Cards -->
+                <div class="row">
+                    <!-- Movement 1 - Entrada -->
+                    <div class="col-lg-6 col-xl-4">
+                        <div class="movement-card card movement-entrada">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <span class="movement-type-badge type-entrada">Entrada</span>
+                                    <small class="text-muted">2 horas atrás</small>
+                                </div>
+                                
+                                <div class="product-info">
+                                    <div class="product-avatar">QU</div>
+                                    <div>
+                                        <div class="fw-semibold">QU-001</div>
+                                        <small class="text-muted">Ácido Sulfúrico 98%</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="quantity-display quantity-positive">
+                                    +50 L
+                                </div>
+                                
+                                <div class="department-flow">
+                                    <span class="department-badge">DEP. Estoque</span>
+                                </div>
+                                
+                                <div class="user-info">
+                                    <div class="user-avatar">AS</div>
+                                    <span>Admin Sistema</span>
+                                </div>
+                                
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        <i class="bi bi-sticky me-1"></i>
+                                        Entrada via NF 202409001
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Movement 2 - Transferência -->
+                    <div class="col-lg-6 col-xl-4">
+                        <div class="movement-card card movement-transferencia">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <span class="movement-type-badge type-transferencia">Transferência</span>
+                                    <small class="text-muted">4 horas atrás</small>
+                                </div>
+                                
+                                <div class="product-info">
+                                    <div class="product-avatar">MP</div>
+                                    <div>
+                                        <div class="fw-semibold">MP-005</div>
+                                        <small class="text-muted">Polímero PVC 100kg</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="quantity-display quantity-neutral">
+                                    20 KG
+                                </div>
+                                
+                                <div class="department-flow">
+                                    <span class="department-badge">DEP. Análise</span>
+                                    <i class="bi bi-arrow-right flow-arrow"></i>
+                                    <span class="department-badge">DEP. Industrial</span>
+                                </div>
+                                
+                                <div class="user-info">
+                                    <div class="user-avatar">LT</div>
+                                    <span>Lab Técnico</span>
+                                </div>
+                                
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        <i class="bi bi-check-circle me-1"></i>
+                                        Produto aprovado na análise AN202409001
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Movement 3 - Saída -->
+                    <div class="col-lg-6 col-xl-4">
+                        <div class="movement-card card movement-saida">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <span class="movement-type-badge type-saida">Saída</span>
+                                    <small class="text-muted">6 horas atrás</small>
+                                </div>
+                                
+                                <div class="product-info">
+                                    <div class="product-avatar">EM</div>
+                                    <div>
+                                        <div class="fw-semibold">EM-012</div>
+                                        <small class="text-muted">Embalagem 500ml</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="quantity-display quantity-negative">
+                                    -200 UN
+                                </div>
+                                
+                                <div class="department-flow">
+                                    <span class="department-badge">DEP. Industrial</span>
+                                </div>
+                                
+                                <div class="user-info">
+                                    <div class="user-avatar">PI</div>
+                                    <span>Prod Industrial</span>
+                                </div>
+                                
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        <i class="bi bi-gear me-1"></i>
+                                        Uso na produção lote L20240912
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Movement 4 - Ajuste -->
+                    <div class="col-lg-6 col-xl-4">
+                        <div class="movement-card card movement-ajuste">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <span class="movement-type-badge type-ajuste">Ajuste</span>
+                                    <small class="text-muted">1 dia atrás</small>
+                                </div>
+                                
+                                <div class="product-info">
+                                    <div class="product-avatar">QU</div>
+                                    <div>
+                                        <div class="fw-semibold">QU-003</div>
+                                        <small class="text-muted">Hidróxido de Sódio</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="quantity-display quantity-neutral">
+                                    +5 KG
+                                </div>
+                                
+                                <div class="department-flow">
+                                    <span class="department-badge">DEP. Estoque</span>
+                                </div>
+                                
+                                <div class="user-info">
+                                    <div class="user-avatar">AS</div>
+                                    <span>Admin Sistema</span>
+                                </div>
+                                
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        <i class="bi bi-wrench me-1"></i>
+                                        Correção de inventário físico
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Movement 5 - Descarte -->
+                    <div class="col-lg-6 col-xl-4">
+                        <div class="movement-card card movement-descarte">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <span class="movement-type-badge type-descarte">Descarte</span>
+                                    <small class="text-muted">2 dias atrás</small>
+                                </div>
+                                
+                                <div class="product-info">
+                                    <div class="product-avatar">MP</div>
+                                    <div>
+                                        <div class="fw-semibold">MP-001</div>
+                                        <small class="text-muted">Matéria Prima Vencida</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="quantity-display quantity-negative">
+                                    -15 KG
+                                </div>
+                                
+                                <div class="department-flow">
+                                    <span class="department-badge">DEP. Estoque</span>
+                                </div>
+                                
+                                <div class="user-info">
+                                    <div class="user-avatar">QM</div>
+                                    <span>Qualidade Manager</span>
+                                </div>
+                                
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        <i class="bi bi-trash me-1"></i>
+                                        Produto vencido - descarte obrigatório
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Movement 6 - Transferência -->
+                    <div class="col-lg-6 col-xl-4">
+                        <div class="movement-card card movement-transferencia">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <span class="movement-type-badge type-transferencia">Transferência</span>
+                                    <small class="text-muted">3 dias atrás</small>
+                                </div>
+                                
+                                <div class="product-info">
+                                    <div class="product-avatar">EM</div>
+                                    <div>
+                                        <div class="fw-semibold">EM-008</div>
+                                        <small class="text-muted">Rótulos Adesivos</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="quantity-display quantity-neutral">
+                                    1000 UN
+                                </div>
+                                
+                                <div class="department-flow">
+                                    <span class="department-badge">DEP. Estoque</span>
+                                    <i class="bi bi-arrow-right flow-arrow"></i>
+                                    <span class="department-badge">DEP. Industrial</span>
+                                </div>
+                                
+                                <div class="user-info">
+                                    <div class="user-avatar">GE</div>
+                                    <span>Gestor Estoque</span>
+                                </div>
+                                
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        <i class="bi bi-arrow-repeat me-1"></i>
+                                        Reposição para linha de produção
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Load More Button -->
+                <div class="text-center mt-4">
+                    <button class="btn btn-outline-primary" id="loadMoreBtn">
+                        <i class="bi bi-arrow-down-circle me-2"></i>
+                        Carregar Mais Movimentações
+                    </button>
+                </div>
+                
+                <!-- Instructions -->
+                <div class="alert alert-info mt-4">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-info-circle me-3 fs-4"></i>
+                        <div>
+                            <h6 class="alert-heading mb-1">Sobre as Movimentações</h6>
+                            <p class="mb-0">
+                                <strong>Entradas:</strong> Produtos adicionados ao estoque via notas fiscais. 
+                                <strong>Transferências:</strong> Movimentos entre departamentos (análise → industrial). 
+                                <strong>Saídas:</strong> Produtos utilizados na produção ou expedição.
+                                <strong>Ajustes:</strong> Correções manuais de inventário.
+                                <strong>Descartes:</strong> Produtos vencidos ou danificados removidos do estoque.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Filter functionality
+    function applyFilters() {
+        const typeFilter = document.getElementById('filterType').value
+        const departmentFilter = document.getElementById('filterDepartment').value
+        const dateFilter = document.getElementById('filterDate').value
+        const searchFilter = document.getElementById('searchProduct').value.toLowerCase()
+        
+        const movementCards = document.querySelectorAll('.movement-card')
+        
+        movementCards.forEach(card => {
+            let showCard = true
+            
+            // Type filter
+            if (typeFilter) {
+                const cardType = card.querySelector('.movement-type-badge').textContent.toLowerCase()
+                if (!cardType.includes(typeFilter)) {
+                    showCard = false
+                }
+            }
+            
+            // Search filter
+            if (searchFilter) {
+                const productCode = card.querySelector('.fw-semibold').textContent.toLowerCase()
+                const productName = card.querySelector('.product-info small').textContent.toLowerCase()
+                if (!productCode.includes(searchFilter) && !productName.includes(searchFilter)) {
+                    showCard = false
+                }
+            }
+            
+            // Show/hide card
+            const col = card.closest('.col-lg-6')
+            if (col) {
+                col.style.display = showCard ? '' : 'none'
+            }
+        })
+    }
+    
+    // Attach filter events
+    document.getElementById('filterType')?.addEventListener('change', applyFilters)
+    document.getElementById('filterDepartment')?.addEventListener('change', applyFilters)
+    document.getElementById('filterDate')?.addEventListener('change', applyFilters)
+    document.getElementById('searchProduct')?.addEventListener('input', applyFilters)
+    
+    // Load more functionality
+    document.getElementById('loadMoreBtn')?.addEventListener('click', function() {
+        this.disabled = true
+        this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Carregando...'
+        
+        // Simulate loading
+        setTimeout(() => {
+            this.disabled = false
+            this.innerHTML = '<i class="bi bi-arrow-down-circle me-2"></i>Carregar Mais Movimentações'
+            
+            // Show success message
+            const alertDiv = document.createElement('div')
+            alertDiv.className = 'alert alert-info alert-dismissible fade show mt-3'
+            alertDiv.innerHTML = `
+                <i class="bi bi-info-circle me-2"></i>
+                Todas as movimentações foram carregadas.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `
+            
+            this.parentNode.appendChild(alertDiv)
+            
+            // Auto dismiss
+            setTimeout(() => {
+                const alert = bootstrap.Alert.getInstance(alertDiv)
+                if (alert) alert.close()
+            }, 3000)
+        }, 1500)
+    })
+    
+    // Auto-refresh every 2 minutes
+    setInterval(() => {
+        // Update timestamps
+        document.querySelectorAll('.text-muted').forEach(element => {
+            if (element.textContent.includes('atrás')) {
+                // Simulate time progression
+                const currentText = element.textContent
+                if (currentText.includes('horas')) {
+                    const hours = parseInt(currentText.match(/\d+/)[0])
+                    element.textContent = `${hours + 1} horas atrás`
+                }
+            }
+        })
+    }, 120000) // 2 minutes
+</script>
+{% endblock %}
