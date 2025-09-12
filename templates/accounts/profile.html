@@ -1,0 +1,579 @@
+{% extends 'base.html' %}
+
+{% block title %}Perfil - Sistema de Gerenciamento de Estoque{% endblock %}
+
+{% block page_title %}Meu Perfil{% endblock %}
+
+{% block page_actions %}
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#logoutModal">
+            <i class="bi bi-box-arrow-right me-1"></i>
+            Sair da Conta
+        </button>
+    </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        transition: all 0.3s ease;
+    }
+    
+    .profile-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        font-weight: 700;
+        color: white;
+        margin: 0 auto 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    [data-bs-theme="dark"] .profile-avatar {
+        background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+    }
+    
+    .profile-info {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .profile-name {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--bs-gray-800);
+    }
+    
+    [data-bs-theme="dark"] .profile-name {
+        color: var(--bs-gray-100);
+    }
+    
+    .profile-email {
+        color: var(--bs-gray-600);
+        font-size: 1rem;
+    }
+    
+    [data-bs-theme="dark"] .profile-email {
+        color: var(--bs-gray-400);
+    }
+    
+    .verification-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.5rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin-top: 0.5rem;
+    }
+    
+    .verified {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+        border: 1px solid rgba(25, 135, 84, 0.2);
+    }
+    
+    .unverified {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+        border: 1px solid rgba(220, 53, 69, 0.2);
+    }
+    
+    .permissions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .permission-item {
+        padding: 1rem;
+        background: var(--bs-gray-50);
+        border-radius: 8px;
+        border-left: 4px solid var(--bs-primary);
+    }
+    
+    [data-bs-theme="dark"] .permission-item {
+        background: var(--bs-gray-800);
+    }
+    
+    .permission-module {
+        font-weight: 600;
+        color: var(--bs-gray-800);
+        margin-bottom: 0.5rem;
+    }
+    
+    [data-bs-theme="dark"] .permission-module {
+        color: var(--bs-gray-100);
+    }
+    
+    .permission-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+    }
+    
+    .permission-badge {
+        background: var(--bs-primary);
+        color: white;
+        padding: 0.125rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        border-radius: 12px;
+        border: 1px solid var(--bs-gray-200);
+    }
+    
+    [data-bs-theme="dark"] .stat-item {
+        background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+        border-color: var(--bs-gray-700);
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--bs-primary);
+        display: block;
+    }
+    
+    .stat-label {
+        color: var(--bs-gray-600);
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-top: 0.5rem;
+    }
+    
+    [data-bs-theme="dark"] .stat-label {
+        color: var(--bs-gray-300);
+    }
+    
+    .form-section {
+        background: var(--bs-gray-50);
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid var(--bs-primary);
+    }
+    
+    [data-bs-theme="dark"] .form-section {
+        background: var(--bs-gray-800);
+    }
+    
+    .section-title {
+        font-weight: 600;
+        color: var(--bs-gray-800);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    [data-bs-theme="dark"] .section-title {
+        color: var(--bs-gray-100);
+    }
+    
+    .section-title i {
+        margin-right: 0.5rem;
+        color: var(--bs-primary);
+    }
+    
+    .activity-item {
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--bs-gray-200);
+        display: flex;
+        justify-content: between;
+        align-items: center;
+    }
+    
+    [data-bs-theme="dark"] .activity-item {
+        border-color: var(--bs-gray-700);
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    
+    .activity-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--bs-primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    .activity-content {
+        flex: 1;
+    }
+    
+    .activity-action {
+        font-weight: 500;
+        color: var(--bs-gray-800);
+    }
+    
+    [data-bs-theme="dark"] .activity-action {
+        color: var(--bs-gray-100);
+    }
+    
+    .activity-time {
+        font-size: 0.75rem;
+        color: var(--bs-gray-500);
+    }
+    
+    [data-bs-theme="dark"] .activity-time {
+        color: var(--bs-gray-400);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Profile Info Column -->
+    <div class="col-lg-4 mb-4">
+        <!-- User Info Card -->
+        <div class="card profile-card mb-3">
+            <div class="card-body">
+                <div class="profile-info">
+                    <div class="profile-avatar">
+                        {{ user.first_name|first|default:"U" }}{{ user.last_name|first|default:"" }}
+                    </div>
+                    
+                    <h4 class="profile-name">{{ user.get_full_name|default:user.username }}</h4>
+                    <p class="profile-email">{{ user.email }}</p>
+                    
+                    <div class="verification-badge {{ user.is_email_verified|yesno:'verified,unverified' }}">
+                        <i class="bi {{ user.is_email_verified|yesno:'bi-check-circle,bi-exclamation-circle' }} me-1"></i>
+                        {{ user.is_email_verified|yesno:"Email Verificado,Email Não Verificado" }}
+                    </div>
+                </div>
+                
+                <!-- User Stats -->
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-number">{{ user.custom_permissions.count }}</span>
+                        <div class="stat-label">Permissões</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">{{ user.activities.count }}</span>
+                        <div class="stat-label">Atividades</div>
+                    </div>
+                </div>
+                
+                <!-- Quick Info -->
+                <div class="small text-muted">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Membro desde:</span>
+                        <strong>{{ user.date_joined|date:"d/m/Y" }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Último login:</span>
+                        <strong>{{ user.last_login|date:"d/m/Y H:i"|default:"Nunca" }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Tema:</span>
+                        <strong>{{ user.get_theme_preference_display }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Permissions Card -->
+        {% if user_permissions %}
+        <div class="card profile-card">
+            <div class="card-header bg-transparent border-0 pb-0">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-shield-check me-2"></i>
+                    Minhas Permissões
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="permissions-grid">
+                    {% for permission in user_permissions %}
+                    <div class="permission-item">
+                        <div class="permission-module">{{ permission.get_module_display }}</div>
+                        <div class="permission-list">
+                            <span class="permission-badge">{{ permission.get_permission_display }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Form Column -->
+    <div class="col-lg-8 mb-4">
+        <!-- Edit Profile Form -->
+        <div class="card profile-card">
+            <div class="card-header bg-transparent border-0 pb-0">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-person-gear me-2"></i>
+                    Editar Perfil
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- Personal Information Section -->
+                    <div class="form-section">
+                        <h6 class="section-title">
+                            <i class="bi bi-person-circle"></i>
+                            Informações Pessoais
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    {{ form.first_name }}
+                                    <label for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }}</label>
+                                    {% if form.first_name.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.first_name.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    {{ form.last_name }}
+                                    <label for="{{ form.last_name.id_for_label }}">{{ form.last_name.label }}</label>
+                                    {% if form.last_name.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.last_name.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-floating mb-3">
+                            {{ form.email }}
+                            <label for="{{ form.email.id_for_label }}">
+                                <i class="bi bi-envelope me-2"></i>{{ form.email.label }}
+                            </label>
+                            {% if form.email.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.email.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Professional Information Section -->
+                    <div class="form-section">
+                        <h6 class="section-title">
+                            <i class="bi bi-briefcase"></i>
+                            Informações Profissionais
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    {{ form.phone }}
+                                    <label for="{{ form.phone.id_for_label }}">{{ form.phone.label }}</label>
+                                    {% if form.phone.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.phone.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    {{ form.department }}
+                                    <label for="{{ form.department.id_for_label }}">{{ form.department.label }}</label>
+                                    {% if form.department.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.department.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-floating mb-3">
+                            {{ form.position }}
+                            <label for="{{ form.position.id_for_label }}">{{ form.position.label }}</label>
+                            {% if form.position.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.position.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Preferences Section -->
+                    <div class="form-section">
+                        <h6 class="section-title">
+                            <i class="bi bi-palette"></i>
+                            Preferências do Sistema
+                        </h6>
+                        
+                        <div class="form-floating mb-3">
+                            {{ form.theme_preference }}
+                            <label for="{{ form.theme_preference.id_for_label }}">{{ form.theme_preference.label }}</label>
+                            {% if form.theme_preference.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.theme_preference.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'accounts:dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>
+                            Voltar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Salvar Alterações
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Recent Activities -->
+        <div class="card profile-card mt-3">
+            <div class="card-header bg-transparent border-0 pb-0">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-clock-history me-2"></i>
+                    Atividades Recentes
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if user.activities.all %}
+                    <div class="activities-list">
+                        {% for activity in user.activities.all|slice:":10" %}
+                        <div class="activity-item">
+                            <div class="activity-icon">
+                                <i class="bi bi-activity"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-action">{{ activity.action }}</div>
+                                {% if activity.description %}
+                                    <div class="activity-description small text-muted">
+                                        {{ activity.description|truncatechars:60 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="activity-time">
+                                {{ activity.timestamp|timesince }} atrás
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-inbox display-6 d-block mb-2"></i>
+                        Nenhuma atividade registrada
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Logout Modal -->
+<div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="logoutModalLabel">
+                    <i class="bi bi-box-arrow-right me-2"></i>
+                    Confirmar Logout
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">Tem certeza que deseja sair do sistema?</p>
+                <small class="text-muted">Sua sessão será encerrada e você precisará fazer login novamente.</small>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <a href="{% url 'accounts:logout' %}" class="btn btn-danger">
+                    <i class="bi bi-box-arrow-right me-1"></i>
+                    Sair da Conta
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Phone mask
+    const phoneInput = document.querySelector('#{{ form.phone.id_for_label }}')
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '')
+            if (value.length <= 11) {
+                if (value.length > 6) {
+                    value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')
+                } else if (value.length > 2) {
+                    value = value.replace(/(\d{2})(\d)/, '($1) $2')
+                }
+                e.target.value = value
+            }
+        })
+    }
+    
+    // Form submission handling
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('button[type="submit"]')
+        if (submitBtn) {
+            submitBtn.disabled = true
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Salvando...'
+        }
+    })
+    
+    // Theme change handling
+    const themeSelect = document.querySelector('#{{ form.theme_preference.id_for_label }}')
+    if (themeSelect) {
+        themeSelect.addEventListener('change', function(e) {
+            const theme = e.target.value
+            if (theme !== 'auto') {
+                localStorage.setItem('theme', theme)
+                setTheme(theme)
+            }
+        })
+    }
+</script>
+{% endblock %}
