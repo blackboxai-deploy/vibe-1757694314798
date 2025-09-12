@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bs-theme="auto">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema de Gerenciamento de Estoque</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bs-font-sans-serif: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        
+        body {
+            font-family: var(--bs-font-sans-serif);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        [data-bs-theme="dark"] body {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+        }
+        
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            max-width: 900px;
+            width: 100%;
+            min-height: 600px;
+        }
+        
+        [data-bs-theme="dark"] .login-container {
+            background: rgba(33, 37, 41, 0.95);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .login-left {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        [data-bs-theme="dark"] .login-left {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+        }
+        
+        .login-right {
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .brand-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .brand-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 2rem 0;
+        }
+        
+        .feature-list li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .feature-list i {
+            margin-right: 1rem;
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+        
+        .login-form {
+            max-width: 400px;
+        }
+        
+        .form-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--bs-gray-800);
+        }
+        
+        [data-bs-theme="dark"] .form-title {
+            color: var(--bs-gray-100);
+        }
+        
+        .form-subtitle {
+            color: var(--bs-gray-600);
+            margin-bottom: 2rem;
+        }
+        
+        [data-bs-theme="dark"] .form-subtitle {
+            color: var(--bs-gray-400);
+        }
+        
+        .form-floating {
+            margin-bottom: 1rem;
+        }
+        
+        .form-control {
+            border: 2px solid transparent;
+            background-color: var(--bs-gray-50);
+            border-radius: 12px;
+            padding: 1rem 0.75rem;
+            height: auto;
+            transition: all 0.3s ease;
+        }
+        
+        [data-bs-theme="dark"] .form-control {
+            background-color: var(--bs-gray-800);
+            color: var(--bs-gray-100);
+        }
+        
+        .form-control:focus {
+            background-color: white;
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        [data-bs-theme="dark"] .form-control:focus {
+            background-color: var(--bs-gray-700);
+            border-color: #3498db;
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+        
+        .btn-login {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 0.875rem 2rem;
+            font-weight: 600;
+            font-size: 1rem;
+            color: white;
+            width: 100%;
+            margin-top: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            color: white;
+        }
+        
+        [data-bs-theme="dark"] .btn-login {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+        }
+        
+        [data-bs-theme="dark"] .btn-login:hover {
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+        }
+        
+        .register-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--bs-gray-200);
+        }
+        
+        [data-bs-theme="dark"] .register-link {
+            border-color: var(--bs-gray-700);
+        }
+        
+        .register-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+        
+        [data-bs-theme="dark"] .register-link a {
+            color: #3498db;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .remember-me {
+            margin: 1rem 0;
+        }
+        
+        .form-check-input:checked {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+        
+        [data-bs-theme="dark"] .form-check-input:checked {
+            background-color: #3498db;
+            border-color: #3498db;
+        }
+        
+        @media (max-width: 768px) {
+            .login-container {
+                border-radius: 0;
+                min-height: 100vh;
+            }
+            
+            .login-left {
+                display: none;
+            }
+            
+            .login-right {
+                padding: 40px 30px;
+            }
+            
+            .brand-title {
+                font-size: 2rem;
+            }
+        }
+        
+        /* Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .login-form {
+            animation: fadeInUp 0.6s ease;
+        }
+        
+        .feature-list li {
+            animation: fadeInUp 0.6s ease;
+        }
+        
+        .feature-list li:nth-child(1) { animation-delay: 0.1s; }
+        .feature-list li:nth-child(2) { animation-delay: 0.2s; }
+        .feature-list li:nth-child(3) { animation-delay: 0.3s; }
+        .feature-list li:nth-child(4) { animation-delay: 0.4s; }
+    </style>
+</head>
+<body>
+    <!-- Theme Detection Script -->
+    <script>
+        function getStoredTheme() { return localStorage.getItem('theme') }
+        function getPreferredTheme() {
+            const storedTheme = getStoredTheme()
+            if (storedTheme) {
+                return storedTheme
+            }
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        }
+        
+        function setTheme(theme) {
+            if (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-bs-theme', 'dark')
+            } else {
+                document.documentElement.setAttribute('data-bs-theme', theme)
+            }
+        }
+        
+        setTheme(getPreferredTheme())
+        
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            const storedTheme = getStoredTheme()
+            if (storedTheme !== 'light' && storedTheme !== 'dark') {
+                setTheme(getPreferredTheme())
+            }
+        })
+    </script>
+
+    <!-- Theme Toggle -->
+    <div class="theme-toggle">
+        <div class="dropdown">
+            <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-palette"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#" data-bs-theme-value="light">
+                    <i class="bi bi-sun me-2"></i>Claro
+                </a></li>
+                <li><a class="dropdown-item" href="#" data-bs-theme-value="dark">
+                    <i class="bi bi-moon me-2"></i>Escuro
+                </a></li>
+                <li><a class="dropdown-item" href="#" data-bs-theme-value="auto">
+                    <i class="bi bi-circle-half me-2"></i>Automático
+                </a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="login-container">
+        <div class="row g-0 h-100">
+            <!-- Left Side - Brand Info -->
+            <div class="col-lg-6 login-left d-none d-lg-flex">
+                <div>
+                    <div class="brand-title">
+                        <i class="bi bi-boxes me-3"></i>
+                        SGE
+                    </div>
+                    <p class="brand-subtitle">
+                        Sistema completo de gerenciamento de estoque com controle de qualidade, 
+                        rastreabilidade e análise de produtos.
+                    </p>
+                    
+                    <ul class="feature-list">
+                        <li>
+                            <i class="bi bi-check-circle"></i>
+                            Controle completo de estoque
+                        </li>
+                        <li>
+                            <i class="bi bi-shield-check"></i>
+                            Sistema de análise de qualidade
+                        </li>
+                        <li>
+                            <i class="bi bi-graph-up"></i>
+                            Relatórios e analytics avançados
+                        </li>
+                        <li>
+                            <i class="bi bi-people"></i>
+                            Gestão de usuários e permissões
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Right Side - Login Form -->
+            <div class="col-lg-6 login-right">
+                <div class="login-form">
+                    <h2 class="form-title">Bem-vindo</h2>
+                    <p class="form-subtitle">Entre com suas credenciais para acessar o sistema</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="form-floating">
+                            {{ form.email }}
+                            <label for="{{ form.email.id_for_label }}">
+                                <i class="bi bi-envelope me-2"></i>{{ form.email.label }}
+                            </label>
+                        </div>
+                        
+                        <div class="form-floating">
+                            {{ form.password }}
+                            <label for="{{ form.password.id_for_label }}">
+                                <i class="bi bi-lock me-2"></i>{{ form.password.label }}
+                            </label>
+                        </div>
+                        
+                        <div class="remember-me">
+                            <div class="form-check">
+                                {{ form.remember_me }}
+                                <label class="form-check-label" for="{{ form.remember_me.id_for_label }}">
+                                    {{ form.remember_me.label }}
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-login">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>
+                            Entrar
+                        </button>
+                    </form>
+                    
+                    <div class="register-link">
+                        <p class="mb-0">
+                            Não tem uma conta? 
+                            <a href="{% url 'accounts:register' %}">Criar conta</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Theme switching
+        document.querySelectorAll('[data-bs-theme-value]').forEach(toggle => {
+            toggle.addEventListener('click', (e) => {
+                e.preventDefault()
+                const theme = toggle.getAttribute('data-bs-theme-value')
+                localStorage.setItem('theme', theme)
+                setTheme(theme)
+            })
+        })
+        
+        // Form handling
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const submitBtn = this.querySelector('button[type="submit"]')
+            submitBtn.disabled = true
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Entrando...'
+        })
+        
+        // Auto-dismiss alerts
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(alert => {
+                const bsAlert = new bootstrap.Alert(alert)
+                bsAlert.close()
+            })
+        }, 5000)
+    </script>
+</body>
+</html>
